@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loop AI - Billing Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<style>
+  :root {
+    /* Loop brand palette - dark sidebar, teal accents */
+    --sidebar-bg: #0F1923;
+    --sidebar-hover: #1A2B3A;
+    --sidebar-active: #243B4F;
+    --primary: #00BFA6;
+    --primary-hover: #00D9BC;
+    --primary-dark: #009E8A;
+    --primary-glow: rgba(0,191,166,0.15);
+    --primary-glow-strong: rgba(0,191,166,0.25);
+    --accent-orange: #FF8C42;
+    --accent-purple: #7C5CFC;
+    --accent-blue: #4EA8DE;
+    --accent-pink: #F472B6;
+    --danger: #EF4444;
+    --danger-bg: #FEF2F2;
+    --warning: #F59E0B;
+    --warning-bg: #FFFBEB;
+    --success: #10B981;
+    --success-bg: #ECFDF5;
+    --bg: #F4F6F9;
+    --card: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow: 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+
+  /* Sidebar - Loop dark nav */
+  .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; padding: 0; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar-top { padding: 24px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .sidebar .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .sidebar .logo img { width: 32px; height: 32px; border-radius: 8px; }
+  .sidebar .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .sidebar .logo-text span { color: var(--primary); }
+  .sidebar .entity-selector { padding: 10px 12px; background: rgba(255,255,255,0.06); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08); }
+  .sidebar .entity-selector label { color: rgba(255,255,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; display: block; margin-bottom: 6px; }
+  .sidebar .entity-selector select { width: 100%; background: transparent; border: none; color: #fff; font-size: 13px; font-family: 'Sora', sans-serif; font-weight: 500; cursor: pointer; outline: none; }
+  .sidebar .entity-selector select option { color: #333; background: #fff; }
+
+  .sidebar nav { padding: 16px 0; flex: 1; }
+  .sidebar nav a { display: flex; align-items: center; gap: 14px; padding: 11px 24px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+  .sidebar nav a .material-icons { font-size: 20px; }
+  .sidebar nav a:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.85); }
+  .sidebar nav a.active { background: var(--sidebar-active); color: #fff; border-left-color: var(--primary); }
+
+  /* Main */
+  .main { flex: 1; padding: 32px 40px; overflow-y: auto; max-height: 100vh; }
+  .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .main-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .main-header .user-info { display: flex; align-items: center; gap: 12px; }
+  .main-header .org-name { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+  .main-header .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent-blue)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 13px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .tab { padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; user-select: none; }
+  .tab:hover { color: var(--text-secondary); }
+  .tab.active { color: var(--primary-dark); border-bottom-color: var(--primary); font-weight: 600; }
+
+  /* Cards */
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-header h3 { font-size: 15px; font-weight: 600; }
+  .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .badge-green { background: var(--success-bg); color: var(--success); }
+  .badge-orange { background: var(--warning-bg); color: var(--warning); }
+  .badge-red { background: var(--danger-bg); color: var(--danger); }
+  .badge-teal { background: var(--primary-glow); color: var(--primary-dark); }
+
+  /* Summary Boxes */
+  .summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .summary-box { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+  .summary-box .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 8px; }
+  .summary-box .value { font-size: 26px; font-weight: 700; color: var(--text); }
+  .summary-box .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Billed vs Payments Chart */
+  .chart-container { padding: 8px 0; }
+  .chart-bars { display: flex; gap: 20px; align-items: flex-end; justify-content: center; padding: 16px 0; }
+  .chart-month { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .chart-month .bars { display: flex; gap: 5px; align-items: flex-end; }
+  .chart-month .bar { width: 24px; border-radius: 4px 4px 0 0; transition: all 0.3s; }
+  .bar-billed { background: linear-gradient(180deg, var(--accent-blue), #2563EB); }
+  .bar-paid { background: linear-gradient(180deg, var(--primary), var(--primary-dark)); }
+  .chart-month .month-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .chart-legend { display: flex; gap: 24px; justify-content: center; margin-top: 16px; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+  .chart-legend span { display: flex; align-items: center; gap: 8px; }
+  .chart-legend .dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* ==================== MY LOOP PRODUCTS ==================== */
+  .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  /* Active product card - clean, confident */
+  .product-card { border-radius: var(--radius-lg); padding: 0; overflow: hidden; border: 1px solid var(--border); background: var(--card); transition: all 0.25s; position: relative; }
+  .product-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .product-card .product-banner { padding: 20px 24px 16px; display: flex; align-items: flex-start; gap: 14px; }
+  .product-card.active .product-banner { background: #1A2332; color: #fff; }
+  .product-card .product-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .product-card.active .product-icon { background: rgba(0,191,166,0.15); }
+  .product-card .product-icon .material-icons { font-size: 20px; }
+  .product-card.active .product-icon .material-icons { color: var(--primary); }
+  .product-card .product-banner-text { flex: 1; min-width: 0; }
+  .product-card .product-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .product-card .product-locs { font-size: 12px; opacity: 0.6; font-weight: 400; }
+  .product-card .product-body { padding: 16px 24px 20px; }
+  .product-card .product-pricing { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .product-card .product-ppl { font-size: 12px; color: var(--text-secondary); }
+  .product-card .product-total { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
+  .product-card .product-total-label { font-size: 11px; color: var(--text-muted); }
+  .product-card .product-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .product-card .active-badge { position: absolute; top: 18px; right: 18px; background: rgba(0,191,166,0.15); color: var(--primary); font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* FOMO product card - vibrant orange, enticing */
+  .product-card.fomo { border: 1px solid rgba(255,140,66,0.3); background: linear-gradient(160deg, #FFFAF5 0%, #FFF5ED 40%, #FEF0E7 100%); }
+  .product-card.fomo:hover { border-color: var(--accent-orange); box-shadow: 0 8px 32px rgba(255,140,66,0.15), 0 0 0 1px rgba(255,140,66,0.1); transform: translateY(-2px); }
+  .product-card.fomo .product-banner { background: linear-gradient(135deg, #1E293B 0%, #334155 100%); color: #fff; }
+  .product-card.fomo .fomo-unlock-badge { background: rgba(255,140,66,0.2); color: var(--accent-orange); font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+  .product-card.fomo .product-icon { background: rgba(255,140,66,0.2); }
+  .product-card.fomo .product-icon .material-icons { color: var(--accent-orange); }
+  .product-card.fomo .product-name { color: #fff; }
+  .product-card.fomo .product-locs { color: rgba(255,255,255,0.6); }
+  .fomo-tagline { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; padding: 12px 24px 0; }
+  .fomo-stat { display: flex; align-items: center; gap: 8px; padding: 10px 24px; background: linear-gradient(90deg, #FFF7ED, #FFEDD5); border-top: 1px solid rgba(255,140,66,0.15); font-size: 12px; color: #9A3412; font-weight: 600; }
+  .fomo-stat .material-icons { font-size: 16px; color: #F97316; }
+  .fomo-actions { padding: 14px 24px 20px; display: flex; flex-direction: column; gap: 7px; }
+  .fomo-btn { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; font-family: 'Sora', sans-serif; width: 100%; text-align: left; }
+  .fomo-btn .material-icons { font-size: 18px; }
+  .fomo-btn-video { background: rgba(124,92,252,0.08); color: #5B21B6; }
+  .fomo-btn-video:hover { background: rgba(124,92,252,0.15); }
+  .fomo-btn-report { background: rgba(255,140,66,0.08); color: #9A3412; }
+  .fomo-btn-report:hover { background: rgba(255,140,66,0.15); }
+  .fomo-btn-enable { background: linear-gradient(135deg, #F97316, #EA580C); color: #fff; font-weight: 600; justify-content: center; box-shadow: 0 2px 8px rgba(249,115,22,0.25); }
+  .fomo-btn-enable:hover { background: linear-gradient(135deg, #FB923C, #F97316); box-shadow: 0 4px 16px rgba(249,115,22,0.35); }
+  .fomo-btn-share { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .fomo-btn-share:hover { border-color: var(--accent-orange); color: var(--accent-orange); }
+  .fomo-row { display: flex; gap: 8px; }
+  .fomo-row .fomo-btn { flex: 1; justify-content: center; }
+
+  /* ==================== BILLING GROUPS ==================== */
+  .group-card { display: grid; grid-template-columns: 1.2fr 1.5fr 1.2fr 0.8fr; gap: 20px; align-items: start; }
+  .group-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
+  .group-value { font-size: 14px; font-weight: 500; }
+  .group-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .edit-bar { display: flex; justify-content: flex-end; gap: 10px; padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--border-light); }
+  .field-required::after { content: " *"; color: var(--danger); }
+  .validation-msg { font-size: 11px; color: var(--danger); margin-top: 4px; display: none; }
+  .validation-msg.show { display: block; }
+
+  /* Edit mode for billing groups */
+  .edit-field { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Sora', sans-serif; width: 100%; transition: border-color 0.2s; }
+  .edit-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+  .edit-field.error { border-color: var(--danger); }
+  .edit-field.error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 12px 16px; font-weight: 600; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  td { padding: 14px 16px; border-bottom: 1px solid var(--border-light); }
+  tr:hover td { background: rgba(0,191,166,0.02); }
+  .status-paid { color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .status-pending { color: var(--warning); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .status-overdue { color: var(--danger); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  /* Buttons */
+  .btn { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; font-family: 'Sora', sans-serif; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 12px rgba(0,191,166,0.25); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-ghost { background: transparent; color: var(--primary); padding: 8px 12px; }
+  .btn-ghost:hover { background: var(--primary-glow); }
+  .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: var(--danger-bg); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); background: #fff; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
+  .icon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
+  .icon-btn .material-icons { font-size: 18px; }
+
+  /* Filters */
+  .filters { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-select { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: #fff; color: var(--text); font-family: 'Sora', sans-serif; }
+
+  /* SOA */
+  .soa-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .soa-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,25,35,0.5); backdrop-filter: blur(4px); z-index: 100; justify-content: center; align-items: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: var(--radius-lg); padding: 32px; max-width: 520px; width: 90%; box-shadow: var(--shadow-lg); }
+  .modal h3 { margin-bottom: 16px; font-size: 18px; }
+  .modal p { color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+  .modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* Closure */
+  .closure-form { max-width: 480px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+  .form-group select, .form-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Sora', sans-serif; }
+  .callout { border-radius: var(--radius-sm); padding: 14px 16px; font-size: 13px; line-height: 1.5; }
+  .callout-warning { background: var(--warning-bg); border: 1px solid rgba(245,158,11,0.2); color: #92400E; }
+  .callout-info { background: #EFF6FF; border: 1px solid rgba(59,130,246,0.15); color: #1E40AF; }
+
+  /* Contract link */
+  .contract-link { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--primary-glow); border: 1px solid rgba(0,191,166,0.2); border-radius: var(--radius); color: var(--primary-dark); font-weight: 600; font-size: 14px; text-decoration: none; transition: all 0.2s; }
+  .contract-link:hover { background: var(--primary-glow-strong); border-color: var(--primary); }
+  .contract-link .material-icons { color: var(--primary); }
+
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+  /* Tab panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Toast notification */
+  .toast { position: fixed; bottom: 32px; right: 32px; background: var(--sidebar-bg); color: #fff; padding: 14px 24px; border-radius: var(--radius); box-shadow: var(--shadow-lg); font-size: 13px; font-weight: 500; display: none; align-items: center; gap: 10px; z-index: 200; font-family: 'Sora', sans-serif; }
+  .toast.show { display: flex; animation: slideUp 0.3s ease; }
+  .toast .material-icons { color: var(--primary); font-size: 20px; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  @media (max-width: 1100px) {
+    .summary-row { grid-template-columns: repeat(2, 1fr); }
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+    .group-card { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 20px; }
+    .summary-row, .soa-summary { grid-template-columns: 1fr; }
+    .products-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="logo">
+        <img src="https://loopai.com/loop-small.png" alt="Loop AI" style="width:32px;height:32px;border-radius:6px;">
+        <span class="logo-text">Loop <span>AI</span></span>
+      </div>
+      <div class="entity-selector">
+        <label>Billing Entity</label>
+        <select>
+          <option>Hamm Org (All entities)</option>
+          <option>Hamm Org - East Region</option>
+          <option>Hamm Org - West Region</option>
+        </select>
+      </div>
+    </div>
+    <nav>
+      <a class="active"><span class="material-icons">receipt_long</span> Billing</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="main-header">
+      <h1>Billing</h1>
+      <div class="user-info">
+        <span class="org-name">Hamm Org</span>
+        <div class="avatar">KS</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('overview')">Overview</div>
+      <div class="tab" onclick="showTab('myloop')">My Loop</div>
+      <div class="tab" onclick="showTab('groups')">Billing Groups</div>
+      <div class="tab" onclick="showTab('invoices')">Invoices</div>
+      <div class="tab" onclick="showTab('soa')">Statement of Account</div>
+      <div class="tab" onclick="showTab('closure')">Report Store Closure</div>
+    </div>
+
+    <!-- ===================== OVERVIEW ===================== -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="summary-row">
+        <div class="summary-box">
+          <div class="label">Total Billed (YTD)</div>
+          <div class="value">$18,450</div>
+          <div class="sub">Jan - May 2026</div>
+        </div>
+        <div class="summary-box">
+          <div class="label">Total Payments (YTD)</div>
+          <div class="value" style="color:var(--success)">$15,200</div>
+          <div class="sub">4 of 5 invoices paid</div>
+        </div>
+        <div class="summary-box">
+          <div class="label">Outstanding Balance</div>
+          <div class="value" style="color:var(--danger)">$3,250</div>
+          <div class="sub">1 invoice pending</div>
+        </div>
+        <div class="summary-box">
+          <div class="label">Next Invoice</div>
+          <div class="value" style="font-size:20px;">Jun 1, 2026</div>
+          <div class="sub">Est. $3,690.00</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Billed vs Payments</h3>
+          <select class="filter-select" style="padding:6px 10px;font-size:12px;">
+            <option>2026</option><option>2025</option>
+          </select>
+        </div>
+        <div class="chart-container">
+          <div class="chart-bars">
+            <div class="chart-month"><div class="bars"><div class="bar bar-billed" style="height:90px"></div><div class="bar bar-paid" style="height:90px"></div></div><div class="month-label">Jan</div></div>
+            <div class="chart-month"><div class="bars"><div class="bar bar-billed" style="height:90px"></div><div class="bar bar-paid" style="height:90px"></div></div><div class="month-label">Feb</div></div>
+            <div class="chart-month"><div class="bars"><div class="bar bar-billed" style="height:100px"></div><div class="bar bar-paid" style="height:100px"></div></div><div class="month-label">Mar</div></div>
+            <div class="chart-month"><div class="bars"><div class="bar bar-billed" style="height:115px"></div><div class="bar bar-paid" style="height:115px"></div></div><div class="month-label">Apr</div></div>
+            <div class="chart-month"><div class="bars"><div class="bar bar-billed" style="height:115px"></div><div class="bar bar-paid" style="height:35px"></div></div><div class="month-label">May</div></div>
+            <div class="chart-month" style="opacity:0.4"><div class="bars"><div class="bar" style="height:120px;border:2px dashed var(--accent-blue);width:24px;border-radius:4px 4px 0 0;"></div><div class="bar" style="height:0"></div></div><div class="month-label">Jun</div></div>
+          </div>
+          <div class="chart-legend">
+            <span><span class="dot" style="background:linear-gradient(180deg, var(--accent-blue), #2563EB)"></span> Billed</span>
+            <span><span class="dot" style="background:linear-gradient(180deg, var(--primary), var(--primary-dark))"></span> Payments</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contract File -->
+      <div class="card">
+        <div class="card-header"><h3>Contract File</h3></div>
+        <a href="#" class="contract-link">
+          <span class="material-icons">description</span>
+          Hamm_Org_Loop_Agreement_2025.pdf
+        </a>
+        <span style="margin-left:16px;font-size:12px;color:var(--text-muted);">Signed Dec 15, 2025 &middot; Annual</span>
+      </div>
+    </div>
+
+    <!-- ===================== MY LOOP ===================== -->
+    <div class="tab-panel" id="tab-myloop">
+      <div class="section-title">
+        My Loop
+        <span class="badge badge-teal"><span class="material-icons" style="font-size:14px;">location_on</span> 6 Locations</span>
+      </div>
+      <div class="products-grid">
+
+        <!-- ACTIVE: TruROI+ -->
+        <div class="product-card active">
+          <div class="active-badge">Active</div>
+          <div class="product-banner">
+            <div class="product-icon"><span class="material-icons">trending_up</span></div>
+            <div class="product-banner-text">
+              <div class="product-name">TruROI+</div>
+              <div class="product-locs">6 Locations</div>
+            </div>
+          </div>
+          <div class="product-body">
+            <div class="product-pricing">
+              <span class="product-ppl">$100 PPL/mo</span>
+              <div style="text-align:right;">
+                <div class="product-total">$600<span style="font-size:12px;font-weight:400;color:var(--text-muted)">/mo</span></div>
+              </div>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-outline btn-sm" onclick="showModal('share')"><span class="material-icons" style="font-size:14px">share</span> Share</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVE: Recover -->
+        <div class="product-card active">
+          <div class="active-badge">Active</div>
+          <div class="product-banner">
+            <div class="product-icon"><span class="material-icons">autorenew</span></div>
+            <div class="product-banner-text">
+              <div class="product-name">Recover</div>
+              <div class="product-locs">6 Locations</div>
+            </div>
+          </div>
+          <div class="product-body">
+            <div class="product-pricing">
+              <span class="product-ppl">$15 PPL/mo</span>
+              <div style="text-align:right;">
+                <div class="product-total">$90<span style="font-size:12px;font-weight:400;color:var(--text-muted)">/mo</span></div>
+              </div>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-outline btn-sm" onclick="showModal('share')"><span class="material-icons" style="font-size:14px">share</span> Share</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOMO: Protect -->
+        <div class="product-card fomo">
+          <div class="product-banner">
+            <div class="product-icon"><span class="material-icons">shield</span></div>
+            <div class="product-banner-text">
+              <div class="product-name">Protect</div>
+              <div class="product-locs">Not enabled</div>
+            </div>
+            <span class="fomo-unlock-badge">Explore</span>
+          </div>
+          <div class="fomo-tagline">Proactively block fraudulent chargebacks before they hit your P&L.</div>
+          <div class="fomo-stat">
+            <span class="material-icons">trending_up</span>
+            QSR chains using Protect save avg. $2,400/loc/year
+          </div>
+          <div class="fomo-actions">
+            <button class="fomo-btn fomo-btn-video" onclick="showModal('knowmore-protect')"><span class="material-icons">play_circle</span> Watch Case Study</button>
+            <button class="fomo-btn fomo-btn-report" onclick="showModal('howhelp')"><span class="material-icons">insights</span> How can this help me?</button>
+            <button class="fomo-btn fomo-btn-enable" onclick="showModal('reqenable')"><span class="material-icons">bolt</span> Request to Enable</button>
+            <div class="fomo-row">
+              <button class="fomo-btn fomo-btn-share" onclick="showModal('share')"><span class="material-icons">share</span> Share</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOMO: Balance -->
+        <div class="product-card fomo">
+          <div class="product-banner">
+            <div class="product-icon"><span class="material-icons">account_balance_wallet</span></div>
+            <div class="product-banner-text">
+              <div class="product-name">Balance</div>
+              <div class="product-locs">Not enabled</div>
+            </div>
+            <span class="fomo-unlock-badge">Explore</span>
+          </div>
+          <div class="fomo-tagline">Automated third-party payment reconciliation across all your delivery platforms.</div>
+          <div class="fomo-stat">
+            <span class="material-icons">trending_up</span>
+            Operators recover 3-5% of missed payouts within 60 days
+          </div>
+          <div class="fomo-actions">
+            <button class="fomo-btn fomo-btn-video" onclick="showModal('knowmore-balance')"><span class="material-icons">play_circle</span> Watch Case Study</button>
+            <button class="fomo-btn fomo-btn-report" onclick="showModal('howhelp')"><span class="material-icons">insights</span> How can this help me?</button>
+            <button class="fomo-btn fomo-btn-enable" onclick="showModal('reqenable')"><span class="material-icons">bolt</span> Request to Enable</button>
+            <div class="fomo-row">
+              <button class="fomo-btn fomo-btn-share" onclick="showModal('share')"><span class="material-icons">share</span> Share</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOMO: Loop Inspect -->
+        <div class="product-card fomo">
+          <div class="product-banner">
+            <div class="product-icon"><span class="material-icons">search</span></div>
+            <div class="product-banner-text">
+              <div class="product-name">Loop Inspect</div>
+              <div class="product-locs">Not enabled</div>
+            </div>
+            <span class="fomo-unlock-badge">Explore</span>
+          </div>
+          <div class="fomo-tagline">Deep-dive analytics across every transaction, location, and platform in real time.</div>
+          <div class="fomo-stat">
+            <span class="material-icons">trending_up</span>
+            85% of enterprise chains use Inspect for ops reviews
+          </div>
+          <div class="fomo-actions">
+            <button class="fomo-btn fomo-btn-video" onclick="showModal('knowmore-inspect')"><span class="material-icons">play_circle</span> Watch Case Study</button>
+            <button class="fomo-btn fomo-btn-report" onclick="showModal('howhelp')"><span class="material-icons">insights</span> How can this help me?</button>
+            <button class="fomo-btn fomo-btn-enable" onclick="showModal('reqenable')"><span class="material-icons">bolt</span> Request to Enable</button>
+            <div class="fomo-row">
+              <button class="fomo-btn fomo-btn-share" onclick="showModal('share')"><span class="material-icons">share</span> Share</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOMO: Smart Alerts -->
+        <div class="product-card fomo">
+          <div class="product-banner">
+            <div class="product-icon"><span class="material-icons">notifications_active</span></div>
+            <div class="product-banner-text">
+              <div class="product-name">Smart Alerts</div>
+              <div class="product-locs">Not enabled</div>
+            </div>
+            <span class="fomo-unlock-badge">Explore</span>
+          </div>
+          <div class="fomo-tagline">Get notified instantly when anomalies, outages, or disputes spike at any location.</div>
+          <div class="fomo-stat">
+            <span class="material-icons">local_fire_department</span>
+            Teams respond 4x faster with real-time alerting
+          </div>
+          <div class="fomo-actions">
+            <button class="fomo-btn fomo-btn-video" onclick="showModal('knowmore-alerts')"><span class="material-icons">play_circle</span> Watch Case Study</button>
+            <button class="fomo-btn fomo-btn-report" onclick="showModal('howhelp')"><span class="material-icons">insights</span> How can this help me?</button>
+            <button class="fomo-btn fomo-btn-enable" onclick="showModal('reqenable')"><span class="material-icons">bolt</span> Request to Enable</button>
+            <div class="fomo-row">
+              <button class="fomo-btn fomo-btn-share" onclick="showModal('share')"><span class="material-icons">share</span> Share</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================== BILLING GROUPS ===================== -->
+    <div class="tab-panel" id="tab-groups">
+      <div class="section-title">Billing Groups</div>
+
+      <!-- Group 1 -->
+      <div class="card" id="group1">
+        <div class="card-header">
+          <h3>Hamm Org - East Region</h3>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-green">Active</span>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('group1')"><span class="material-icons" style="font-size:14px">edit</span> Edit</button>
+          </div>
+        </div>
+        <!-- View mode -->
+        <div class="group-view">
+          <div class="group-card">
+            <div>
+              <div class="group-label">Number of Locations</div>
+              <div class="group-value">4</div>
+            </div>
+            <div>
+              <div class="group-label">Account Manager</div>
+              <div class="group-value">Kara Sandoval</div>
+              <div class="group-sub">kara.sandoval@kellypartners.com</div>
+              <div class="group-sub">(555) 123-4567</div>
+            </div>
+            <div>
+              <div class="group-label">Payment Method</div>
+              <div class="group-value" style="display:flex;align-items:center;gap:6px;">
+                <span class="material-icons" style="font-size:18px;color:var(--accent-blue);">credit_card</span>
+                Visa **** 4242
+              </div>
+              <div class="group-sub">Card on file</div>
+            </div>
+            <div>
+              <div class="group-label">Monthly Total</div>
+              <div class="group-value" style="font-size:20px;font-weight:700;color:var(--primary-dark)">$460/mo</div>
+            </div>
+          </div>
+        </div>
+        <!-- Edit mode -->
+        <div class="group-edit" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-group">
+              <label class="field-required">Account Manager Name</label>
+              <input type="text" class="edit-field" value="Kara Sandoval" required data-field="name">
+              <div class="validation-msg">Name is required</div>
+            </div>
+            <div class="form-group">
+              <label class="field-required">Email</label>
+              <input type="email" class="edit-field" value="kara.sandoval@kellypartners.com" required data-field="email">
+              <div class="validation-msg">Valid email is required</div>
+            </div>
+            <div class="form-group">
+              <label class="field-required">Phone</label>
+              <input type="tel" class="edit-field" value="(555) 123-4567" required data-field="phone">
+              <div class="validation-msg">Phone number is required</div>
+            </div>
+            <div class="form-group">
+              <label>Payment Method</label>
+              <select class="edit-field">
+                <option selected>Visa **** 4242</option>
+                <option>ACH / Bank Transfer</option>
+                <option>+ Add new payment method</option>
+              </select>
+            </div>
+          </div>
+          <div class="edit-bar">
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('group1')">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="saveGroup('group1')"><span class="material-icons" style="font-size:14px">save</span> Save Changes</button>
+          </div>
+          <div class="callout callout-info" style="margin-top:12px;font-size:12px;">
+            <span class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px;">info</span>
+            Changes will trigger an email notification to Loop Finance for review.
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2 -->
+      <div class="card" id="group2">
+        <div class="card-header">
+          <h3>Hamm Org - West Region</h3>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="badge badge-green">Active</span>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('group2')"><span class="material-icons" style="font-size:14px">edit</span> Edit</button>
+          </div>
+        </div>
+        <!-- View mode -->
+        <div class="group-view">
+          <div class="group-card">
+            <div>
+              <div class="group-label">Number of Locations</div>
+              <div class="group-value">2</div>
+            </div>
+            <div>
+              <div class="group-label">Account Manager</div>
+              <div class="group-value">Tom Richards</div>
+              <div class="group-sub">tom.richards@hammorg.com</div>
+              <div class="group-sub">(555) 987-6543</div>
+            </div>
+            <div>
+              <div class="group-label">Payment Method</div>
+              <div class="group-value" style="display:flex;align-items:center;gap:6px;">
+                <span class="material-icons" style="font-size:18px;color:var(--accent-blue);">account_balance</span>
+                ACH / Bank Transfer
+              </div>
+              <div class="group-sub">Auto-pay enabled</div>
+            </div>
+            <div>
+              <div class="group-label">Monthly Total</div>
+              <div class="group-value" style="font-size:20px;font-weight:700;color:var(--primary-dark)">$230/mo</div>
+            </div>
+          </div>
+        </div>
+        <!-- Edit mode -->
+        <div class="group-edit" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-group">
+              <label class="field-required">Account Manager Name</label>
+              <input type="text" class="edit-field" value="Tom Richards" required data-field="name">
+              <div class="validation-msg">Name is required</div>
+            </div>
+            <div class="form-group">
+              <label class="field-required">Email</label>
+              <input type="email" class="edit-field" value="tom.richards@hammorg.com" required data-field="email">
+              <div class="validation-msg">Valid email is required</div>
+            </div>
+            <div class="form-group">
+              <label class="field-required">Phone</label>
+              <input type="tel" class="edit-field" value="(555) 987-6543" required data-field="phone">
+              <div class="validation-msg">Phone number is required</div>
+            </div>
+            <div class="form-group">
+              <label>Payment Method</label>
+              <select class="edit-field">
+                <option>Visa **** 4242</option>
+                <option selected>ACH / Bank Transfer</option>
+                <option>+ Add new payment method</option>
+              </select>
+            </div>
+          </div>
+          <div class="edit-bar">
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('group2')">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="saveGroup('group2')"><span class="material-icons" style="font-size:14px">save</span> Save Changes</button>
+          </div>
+          <div class="callout callout-info" style="margin-top:12px;font-size:12px;">
+            <span class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px;">info</span>
+            Changes will trigger an email notification to Loop Finance for review.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== INVOICES ===================== -->
+    <div class="tab-panel" id="tab-invoices">
+      <div class="section-title">Invoices</div>
+
+      <div class="filters">
+        <select class="filter-select"><option>2026</option><option>2025</option></select>
+        <select class="filter-select"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option selected>May</option></select>
+        <div style="flex:1"></div>
+        <button class="icon-btn" title="List view" style="border-color:var(--primary);color:var(--primary);background:var(--primary-glow);"><span class="material-icons">view_list</span></button>
+        <button class="icon-btn" title="Grid view"><span class="material-icons">grid_view</span></button>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Period</th>
+              <th>Billing Group</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th>Paid Date</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600;">INV-2026-0005</td>
+              <td>May 2026</td>
+              <td>East Region</td>
+              <td style="font-weight:600;">$460.00</td>
+              <td><span class="status-pending"><span class="status-dot" style="background:var(--warning)"></span> Pending</span></td>
+              <td>May 15, 2026</td>
+              <td><span style="color:var(--text-muted)">-</span></td>
+              <td style="text-align:right;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                  <button class="icon-btn" title="Download PDF"><span class="material-icons">download</span></button>
+                  <button class="icon-btn" title="View Details" onclick="showModal('invoicedetail')"><span class="material-icons">visibility</span></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">INV-2026-0004</td>
+              <td>May 2026</td>
+              <td>West Region</td>
+              <td style="font-weight:600;">$230.00</td>
+              <td><span class="status-pending"><span class="status-dot" style="background:var(--warning)"></span> Pending</span></td>
+              <td>May 15, 2026</td>
+              <td><span style="color:var(--text-muted)">-</span></td>
+              <td style="text-align:right;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                  <button class="icon-btn" title="Download PDF"><span class="material-icons">download</span></button>
+                  <button class="icon-btn" title="View Details" onclick="showModal('invoicedetail')"><span class="material-icons">visibility</span></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">INV-2026-0003</td>
+              <td>Apr 2026</td>
+              <td>East Region</td>
+              <td style="font-weight:600;">$460.00</td>
+              <td><span class="status-paid"><span class="status-dot" style="background:var(--success)"></span> Paid</span></td>
+              <td>Apr 15, 2026</td>
+              <td>Apr 12, 2026</td>
+              <td style="text-align:right;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                  <button class="icon-btn" title="Download PDF"><span class="material-icons">download</span></button>
+                  <button class="icon-btn" title="View Details" onclick="showModal('invoicedetail')"><span class="material-icons">visibility</span></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">INV-2026-0002</td>
+              <td>Apr 2026</td>
+              <td>West Region</td>
+              <td style="font-weight:600;">$230.00</td>
+              <td><span class="status-paid"><span class="status-dot" style="background:var(--success)"></span> Paid</span></td>
+              <td>Apr 15, 2026</td>
+              <td>Apr 10, 2026</td>
+              <td style="text-align:right;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                  <button class="icon-btn" title="Download PDF"><span class="material-icons">download</span></button>
+                  <button class="icon-btn" title="View Details" onclick="showModal('invoicedetail')"><span class="material-icons">visibility</span></button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">INV-2026-0001</td>
+              <td>Mar 2026</td>
+              <td>All Groups</td>
+              <td style="font-weight:600;">$690.00</td>
+              <td><span class="status-paid"><span class="status-dot" style="background:var(--success)"></span> Paid</span></td>
+              <td>Mar 15, 2026</td>
+              <td>Mar 14, 2026</td>
+              <td style="text-align:right;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                  <button class="icon-btn" title="Download PDF"><span class="material-icons">download</span></button>
+                  <button class="icon-btn" title="View Details" onclick="showModal('invoicedetail')"><span class="material-icons">visibility</span></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== SOA ===================== -->
+    <div class="tab-panel" id="tab-soa">
+      <div class="section-title">Statement of Account</div>
+      <div class="soa-controls">
+        <select class="filter-select"><option>2026</option><option>2025</option></select>
+        <select class="filter-select"><option>So Far (Jan - May 2026)</option><option>Full Year</option></select>
+        <span style="color:var(--text-muted);font-size:13px;">or</span>
+        <input type="date" class="filter-select" value="2026-01-01" style="width:150px;">
+        <span style="color:var(--text-muted);font-size:13px;">to</span>
+        <input type="date" class="filter-select" value="2026-05-06" style="width:150px;">
+        <button class="btn btn-primary btn-sm">Generate</button>
+        <button class="btn btn-outline btn-sm"><span class="material-icons" style="font-size:14px">download</span> Download PDF</button>
+      </div>
+      <div class="soa-summary">
+        <div class="summary-box"><div class="label">Total Billed</div><div class="value" style="font-size:22px;">$18,450.00</div></div>
+        <div class="summary-box"><div class="label">Total Paid</div><div class="value" style="font-size:22px;color:var(--success)">$15,200.00</div></div>
+        <div class="summary-box"><div class="label">Outstanding</div><div class="value" style="font-size:22px;color:var(--danger)">$3,250.00</div></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead><tr><th>Date</th><th>Description</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+          <tbody>
+            <tr><td>Jan 1, 2026</td><td>Opening Balance</td><td>-</td><td>-</td><td>$0.00</td></tr>
+            <tr><td>Jan 1, 2026</td><td>INV-2025-0012 - Jan billing (6 locs)</td><td>$690.00</td><td>-</td><td>$690.00</td></tr>
+            <tr><td>Jan 12, 2026</td><td>Payment received - Visa *4242</td><td>-</td><td>$690.00</td><td style="color:var(--success);font-weight:600;">$0.00</td></tr>
+            <tr><td>Feb 1, 2026</td><td>INV-2026-0001 - Feb billing (6 locs)</td><td>$690.00</td><td>-</td><td>$690.00</td></tr>
+            <tr><td>Feb 10, 2026</td><td>Payment received - ACH</td><td>-</td><td>$690.00</td><td style="color:var(--success);font-weight:600;">$0.00</td></tr>
+            <tr style="font-weight:600;background:var(--bg);"><td>May 6, 2026</td><td>Current Balance</td><td></td><td></td><td style="color:var(--danger);">$3,250.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== REPORT STORE CLOSURE ===================== -->
+    <div class="tab-panel" id="tab-closure">
+      <div class="section-title">Report Store Closure</div>
+      <div class="card">
+        <div class="closure-form">
+          <div class="form-group">
+            <label>Select Location to Close</label>
+            <select class="filter-select" style="width:100%;" id="closureLocation" onchange="updateClosureMsg()">
+              <option value="">-- Select a location --</option>
+              <option>East - Philadelphia, PA</option>
+              <option>East - Brooklyn, NY</option>
+              <option>East - Boston, MA</option>
+              <option>East - Baltimore, MD</option>
+              <option>West - Los Angeles, CA</option>
+              <option>West - Portland, OR</option>
+            </select>
+          </div>
+          <div id="closureConfirmation" style="display:none;">
+            <div class="callout callout-warning" style="margin-bottom:16px;">
+              <strong>Please confirm:</strong> Billing for <strong id="closureLocName"></strong> will be discontinued from <strong id="closureDate"></strong> onwards (following month billing).
+            </div>
+            <div class="form-group">
+              <label>Reason for Closure</label>
+              <select class="filter-select" style="width:100%;">
+                <option value="">-- Select reason --</option>
+                <option>Permanent closure</option>
+                <option>Temporary closure</option>
+                <option>Change of ownership</option>
+                <option>Relocation</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;">
+              <button class="btn btn-danger" onclick="showModal('closureconfirm')">Confirm Store Closure</button>
+              <button class="btn btn-outline" onclick="document.getElementById('closureConfirmation').style.display='none';document.getElementById('closureLocation').value='';">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout callout-info" style="max-width:480px;margin-top:4px;">
+        <span class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px;">info</span>
+        Once submitted, your CSM will be notified and will confirm the closure. The location will continue to be billed through the current billing period.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Know More: Protect -->
+<div class="modal-overlay" id="modal-knowmore-protect">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-icons" style="color:var(--primary)">shield</span> Protect - Case Study</h3>
+    <div style="background:linear-gradient(135deg,#0F1923,#1A3044);border-radius:var(--radius);height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,191,166,0.2);display:flex;align-items:center;justify-content:center;">
+        <span class="material-icons" style="color:var(--primary);font-size:28px;">play_arrow</span>
+      </div>
+    </div>
+    <p><strong>Chili's Franchise Group (52 locations)</strong> reduced chargebacks by 34% within 90 days, saving over $124,000 annually using Loop Protect.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('knowmore-protect')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Know More: Balance -->
+<div class="modal-overlay" id="modal-knowmore-balance">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-icons" style="color:var(--primary)">account_balance_wallet</span> Balance - Case Study</h3>
+    <div style="background:linear-gradient(135deg,#0F1923,#1A3044);border-radius:var(--radius);height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,191,166,0.2);display:flex;align-items:center;justify-content:center;">
+        <span class="material-icons" style="color:var(--primary);font-size:28px;">play_arrow</span>
+      </div>
+    </div>
+    <p><strong>Sweetgreen</strong> recovered $86K in missing third-party payouts in the first quarter using Balance's automated reconciliation engine.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('knowmore-balance')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Know More: Inspect -->
+<div class="modal-overlay" id="modal-knowmore-inspect">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-icons" style="color:var(--primary)">search</span> Loop Inspect - Case Study</h3>
+    <div style="background:linear-gradient(135deg,#0F1923,#1A3044);border-radius:var(--radius);height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,191,166,0.2);display:flex;align-items:center;justify-content:center;">
+        <span class="material-icons" style="color:var(--primary);font-size:28px;">play_arrow</span>
+      </div>
+    </div>
+    <p><strong>Dog Haus</strong> uses Inspect's real-time dashboards to run weekly ops reviews across 40+ locations, cutting reporting time by 70%.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('knowmore-inspect')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Know More: Smart Alerts -->
+<div class="modal-overlay" id="modal-knowmore-alerts">
+  <div class="modal">
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="material-icons" style="color:var(--primary)">notifications_active</span> Smart Alerts - Case Study</h3>
+    <div style="background:linear-gradient(135deg,#0F1923,#1A3044);border-radius:var(--radius);height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(0,191,166,0.2);display:flex;align-items:center;justify-content:center;">
+        <span class="material-icons" style="color:var(--primary);font-size:28px;">play_arrow</span>
+      </div>
+    </div>
+    <p><strong>Iron Arch Management</strong> caught a POS outage across 3 locations within minutes instead of hours, preventing $12K in lost sales using Smart Alerts.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('knowmore-alerts')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- How Can This Help Me? -->
+<div class="modal-overlay" id="modal-howhelp">
+  <div class="modal">
+    <h3>How can this help me?</h3>
+    <div style="background:linear-gradient(135deg,var(--primary-glow),rgba(124,92,252,0.08));border-radius:var(--radius);padding:24px;text-align:center;margin-bottom:16px;">
+      <span class="material-icons" style="font-size:36px;color:var(--primary);">insights</span>
+      <div style="margin-top:10px;font-weight:600;color:var(--primary-dark);font-size:15px;">Personalized Impact Report</div>
+    </div>
+    <p>We'll analyze your current data and segment benchmarks to show exactly how this product can impact your bottom line.</p>
+    <div class="callout callout-info">
+      <span class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px;">schedule</span>
+      You will receive the report in your inbox within <strong>24 hours</strong>.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('howhelp')">Cancel</button>
+      <button class="btn btn-primary" onclick="hideModal('howhelp');showToast('Report requested! Check your inbox within 24 hours.')">Request Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Request to Enable -->
+<div class="modal-overlay" id="modal-reqenable">
+  <div class="modal">
+    <h3>Request to Enable</h3>
+    <p>Your Customer Success Manager will reach out within <strong>24 hours</strong> to walk you through setup, pricing, and next steps.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('reqenable')">Cancel</button>
+      <button class="btn btn-primary" onclick="hideModal('reqenable');showToast('Request submitted! Your CSM will reach out shortly.')">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share -->
+<div class="modal-overlay" id="modal-share">
+  <div class="modal">
+    <h3>Share via Email</h3>
+    <div class="form-group">
+      <label class="field-required">Recipient Email</label>
+      <input type="email" class="edit-field" placeholder="colleague@company.com">
+    </div>
+    <div class="form-group">
+      <label>Message (optional)</label>
+      <textarea rows="3" placeholder="Check out this Loop product..." style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;resize:vertical;font-family:'Sora',sans-serif;"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('share')">Cancel</button>
+      <button class="btn btn-primary" onclick="hideModal('share');showToast('Email sent successfully!')"><span class="material-icons" style="font-size:14px">send</span> Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Detail -->
+<div class="modal-overlay" id="modal-invoicedetail">
+  <div class="modal" style="max-width:640px;">
+    <h3>Invoice Detail - INV-2026-0005</h3>
+    <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px;color:var(--text-secondary);">
+      <span>East Region &middot; May 2026</span>
+      <span class="badge badge-orange">Pending</span>
+    </div>
+    <table style="font-size:13px;">
+      <thead><tr><th style="font-size:11px;">Location</th><th style="font-size:11px;">Product</th><th style="font-size:11px;">PPL/mo</th><th style="font-size:11px;">A/M</th></tr></thead>
+      <tbody>
+        <tr><td>Philadelphia, PA</td><td>TruROI+, Recover</td><td>$115.00</td><td>Kara Sandoval</td></tr>
+        <tr><td>Brooklyn, NY</td><td>TruROI+, Recover</td><td>$115.00</td><td>Kara Sandoval</td></tr>
+        <tr><td>Boston, MA</td><td>TruROI+, Recover</td><td>$115.00</td><td>Kara Sandoval</td></tr>
+        <tr><td>Baltimore, MD</td><td>TruROI+, Recover</td><td>$115.00</td><td>Kara Sandoval</td></tr>
+      </tbody>
+      <tfoot><tr style="font-weight:700;border-top:2px solid var(--border);"><td>Total</td><td></td><td>$460.00</td><td></td></tr></tfoot>
+    </table>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('invoicedetail')">Close</button>
+      <button class="btn btn-primary"><span class="material-icons" style="font-size:14px">download</span> Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Closure Confirm -->
+<div class="modal-overlay" id="modal-closureconfirm">
+  <div class="modal">
+    <h3 style="color:var(--danger);display:flex;align-items:center;gap:8px;"><span class="material-icons">warning</span> Confirm Store Closure</h3>
+    <p>Are you sure? This will notify your CSM and billing will be discontinued from the following month.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="hideModal('closureconfirm')">Go Back</button>
+      <button class="btn btn-danger" onclick="hideModal('closureconfirm');showToast('Store closure reported. Your CSM has been notified.')">Yes, Report Closure</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="material-icons">check_circle</span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    const tabs = document.querySelectorAll('.tab');
+    const map = { overview:0, myloop:1, groups:2, invoices:3, soa:4, closure:5 };
+    if (map[name] !== undefined) tabs[map[name]].classList.add('active');
+  }
+
+  function showModal(name) { document.getElementById('modal-' + name).classList.add('show'); }
+  function hideModal(name) { document.getElementById('modal-' + name).classList.remove('show'); }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+  });
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // Billing group edit toggle
+  function toggleEdit(groupId) {
+    const card = document.getElementById(groupId);
+    const view = card.querySelector('.group-view');
+    const edit = card.querySelector('.group-edit');
+    const isEditing = edit.style.display !== 'none';
+    view.style.display = isEditing ? 'block' : 'none';
+    edit.style.display = isEditing ? 'none' : 'block';
+    // Reset validation on cancel
+    if (isEditing) {
+      card.querySelectorAll('.edit-field').forEach(f => f.classList.remove('error'));
+      card.querySelectorAll('.validation-msg').forEach(m => m.classList.remove('show'));
+    }
+  }
+
+  // Billing group save with validation
+  function saveGroup(groupId) {
+    const card = document.getElementById(groupId);
+    const fields = card.querySelectorAll('.edit-field[required]');
+    let valid = true;
+
+    fields.forEach(field => {
+      const msg = field.nextElementSibling;
+      const val = field.value.trim();
+      let fieldValid = val.length > 0;
+
+      // Email validation
+      if (field.type === 'email' && fieldValid) {
+        fieldValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      }
+      // Phone validation
+      if (field.dataset.field === 'phone' && fieldValid) {
+        fieldValid = val.replace(/\D/g, '').length >= 10;
+      }
+
+      if (!fieldValid) {
+        valid = false;
+        field.classList.add('error');
+        if (msg && msg.classList.contains('validation-msg')) msg.classList.add('show');
+      } else {
+        field.classList.remove('error');
+        if (msg && msg.classList.contains('validation-msg')) msg.classList.remove('show');
+      }
+    });
+
+    if (valid) {
+      toggleEdit(groupId);
+      showToast('Changes saved. Email notification sent to Loop Finance.');
+    }
+  }
+
+  // Closure date logic
+  function updateClosureMsg() {
+    const sel = document.getElementById('closureLocation');
+    const conf = document.getElementById('closureConfirmation');
+    if (sel.value) {
+      conf.style.display = 'block';
+      document.getElementById('closureLocName').textContent = sel.value;
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      document.getElementById('closureDate').textContent = months[next.getMonth()] + ' ' + next.getFullYear();
+    } else {
+      conf.style.display = 'none';
+    }
+  }
+</script>
+</body>
+</html>
