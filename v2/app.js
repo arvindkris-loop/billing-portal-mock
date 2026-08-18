@@ -411,20 +411,25 @@ function metric(label, value, foot, iconName) {
 }
 
 function renderProducts() {
-  const fullSuite = skus[0]
-  const voice = skus.find((item) => item.sku === 'LOOP-VOICE')
-  const impl = skus.find((item) => item.sku === 'LOOP-IMPL')
+  const activeSkus = new Map([
+    ['LOOP-FSBI', { status: 'Active', coverage: '12 Locations', total: '$5,988', cadence: '/mo' }],
+    ['LOOP-VOICE', { status: 'Active', coverage: '12 Locations', total: '$300', cadence: '/mo' }],
+    ['LOOP-IMPL', { status: 'Complete', coverage: '12 Locations', total: '$2,388', cadence: 'one-time' }],
+  ])
+  const orderedSkus = [...skus].sort((a, b) => Number(activeSkus.has(b.sku)) - Number(activeSkus.has(a.sku)))
   return `
-    ${pageHeader(
-      'Products & contract',
-      'Your Loop products',
-      'Current subscriptions use the reorganized product catalog. Legacy product names remain available below for reference.',
-      `<button class="btn btn-primary" data-modal="add-product">${icon('add')} Explore products</button>`,
-    )}
-    <div class="grid grid-3">
-      ${productCard(fullSuite, 'active', '12 locations', '$5,988 / month')}
-      ${productCard(voice, 'active', '12 locations', '$300 / month')}
-      ${productCard(impl, 'complete', '12 locations', '$2,388 one-time')}
+    <div class="myloop-heading">
+      <div>
+        <p class="eyebrow">Products & contract</p>
+        <div class="myloop-title"><h1>My Loop</h1><span class="pill pill-teal">${icon('location_on')} 12 Locations</span></div>
+        <p class="subtitle">See what is active today and explore products available for your next expansion.</p>
+      </div>
+      <button class="btn btn-primary" data-modal="add-product">${icon('add')} Explore products</button>
+    </div>
+    <div class="myloop-grid">
+      ${orderedSkus.map((item) => activeSkus.has(item.sku)
+        ? myLoopActiveCard(item, activeSkus.get(item.sku))
+        : myLoopExploreCard(item)).join('')}
     </div>
     <section class="section">
       <div class="section-heading"><div><h2>Current product catalog</h2><p>Contract-ready SKUs and list prices.</p></div><span class="pill pill-blue">2026 catalog</span></div>
@@ -459,16 +464,54 @@ function renderProducts() {
   `
 }
 
-function productCard(item, status, coverage, total) {
+const productPresentation = {
+  'LOOP-FSBI': { icon: 'dashboard', tagline: 'Finance, Operations, Marketing, and BI in one connected suite.', proof: 'One contract and one workspace across the full Loop platform' },
+  'LOOP-BI': { icon: 'query_stats', tagline: 'Ask business questions and get answers across every connected data source.', proof: 'Teams answer performance questions in minutes, not days' },
+  'LOOP-OPS': { icon: 'settings_suggest', tagline: 'Turn operational exceptions into clear workflows for every location.', proof: 'Keep store-level issues visible from detection through resolution' },
+  'LOOP-MKT': { icon: 'campaign', tagline: 'Connect campaign activity to restaurant revenue and customer behavior.', proof: 'Unify marketing performance across channels and locations' },
+  'LOOP-FIN': { icon: 'account_balance_wallet', tagline: 'Automate 3PD and full revenue reconciliation in one finance workflow.', proof: 'Reconcile third-party delivery and full revenue together' },
+  'LOOP-FIN-3PD': { icon: 'receipt_long', tagline: 'Reconcile third-party delivery payouts, commissions, and adjustments.', proof: 'Find delivery-platform leakage without manual spreadsheet work' },
+  'LOOP-FIN-FULL': { icon: 'fact_check', tagline: 'Extend Finance 3PD into complete revenue reconciliation.', proof: 'Expansion add-on · available with Finance 3PD' },
+  'LOOP-VOICE': { icon: 'graphic_eq', tagline: 'Bring voice workflows into your Loop operating system.', proof: 'Add voice coverage across every contracted location' },
+  'LOOP-IMPL': { icon: 'rocket_launch', tagline: 'Guided platform setup and onboarding for every location.', proof: 'Configuration, mapping, and launch support included' },
+  'LOOP-CMP': { icon: 'explore', tagline: 'Brand-level marketing intelligence for sharper growth decisions.', proof: 'See brand performance and opportunities in one view' },
+}
+
+function myLoopActiveCard(item, active) {
+  const presentation = productPresentation[item.sku]
   return `
-    <article class="product-card active-product">
-      <div class="product-top">
-        <div><h3>${item.name}</h3><span class="sku-code">${item.sku}</span></div>
-        <span class="pill ${status === 'complete' ? 'pill-blue' : 'pill-green'}">${status === 'complete' ? 'Completed' : 'Active'}</span>
+    <article class="myloop-card active">
+      <div class="myloop-banner">
+        <div class="myloop-icon">${icon(presentation.icon)}</div>
+        <div class="myloop-banner-copy"><h2>${item.name}</h2><span>${active.coverage} · ${item.sku}</span></div>
+        <span class="myloop-status">${active.status}</span>
       </div>
-      <div class="price">${total}</div>
-      <p class="product-description">${item.included}</p>
-      <div class="coverage-tags"><span class="tag">${coverage}</span><span class="tag">${item.model}</span></div>
+      <div class="myloop-active-body">
+        <div class="myloop-pricing"><span>$${item.price.toLocaleString()} ${item.unit}</span><strong>${active.total}<small>${active.cadence}</small></strong></div>
+        <p>${presentation.tagline}</p>
+        <button class="btn btn-secondary btn-sm" data-action="share-product" data-product="${item.name}">${icon('share')} Share</button>
+      </div>
+    </article>
+  `
+}
+
+function myLoopExploreCard(item) {
+  const presentation = productPresentation[item.sku]
+  return `
+    <article class="myloop-card explore">
+      <div class="myloop-banner">
+        <div class="myloop-icon">${icon(presentation.icon)}</div>
+        <div class="myloop-banner-copy"><h2>${item.name}</h2><span>${item.sku} · Not enabled</span></div>
+        <span class="myloop-status">Explore</span>
+      </div>
+      <p class="myloop-tagline">${presentation.tagline}</p>
+      <div class="myloop-proof">${icon(item.sku === 'LOOP-FIN-FULL' ? 'extension' : 'trending_up')}<strong>${presentation.proof}</strong></div>
+      <div class="myloop-actions">
+        <button class="myloop-action overview" data-modal="product-detail:${item.sku}">${icon('play_circle')} Watch product overview</button>
+        <button class="myloop-action help" data-action="product-help" data-product="${item.name}">${icon('insights')} How can this help me?</button>
+        <button class="myloop-action enable" data-action="request-product" data-product="${item.name}">${icon('bolt')} Request to enable</button>
+        <button class="myloop-action share" data-action="share-product" data-product="${item.name}">${icon('share')} Share</button>
+      </div>
     </article>
   `
 }
@@ -825,6 +868,7 @@ function renderModal() {
     'replace-method': () => renderReplaceMethodModal(id),
     coverage: renderCoverageModal,
     'add-product': renderAddProductModal,
+    'product-detail': () => renderProductDetailModal(id),
     invoice: () => renderInvoiceModal(id),
     help: renderHelpModal,
   }
@@ -931,6 +975,27 @@ function renderAddProductModal() {
     </div>
   `
   return modalShell('Explore Loop products', 'List pricing shown before contract adjustments', body, '', true)
+}
+
+function renderProductDetailModal(skuCode) {
+  const item = skus.find((sku) => sku.sku === skuCode)
+  if (!item) return ''
+  const presentation = productPresentation[item.sku]
+  const body = `
+    <div class="plan-hero" style="min-height:250px">
+      <p class="eyebrow">${item.category} · ${item.sku}</p>
+      <h2>${item.name}</h2>
+      <p>${presentation.tagline}</p>
+      <div class="hero-price">$${item.price.toLocaleString()} <span>/${item.unit} list price</span></div>
+      <div class="included-list">
+        <div class="included-item">${icon('check_circle')} ${item.included}</div>
+        <div class="included-item">${icon('check_circle')} ${presentation.proof}</div>
+      </div>
+    </div>
+    ${item.sku === 'LOOP-FIN-FULL' ? `<div class="notice warning" style="margin-top:14px">${icon('extension')}<div>Full Revenue Reconciliation is available only as an expansion add-on paired with Finance 3PD.</div></div>` : ''}
+  `
+  const footer = `<button class="btn btn-secondary" data-action="close-modal">Close</button><button class="btn btn-primary" data-action="request-product" data-product="${item.name}">${icon('bolt')} Request to enable</button>`
+  return modalShell(`${item.name} overview`, 'Product preview', body, footer)
 }
 
 function renderInvoiceModal(id) {
@@ -1114,6 +1179,13 @@ document.addEventListener('click', (event) => {
     const product = target.dataset.product
     closeModal()
     toast(`${product} quote requested from your account team.`)
+  } else if (action === 'product-help') {
+    const product = target.dataset.product
+    state.modal = 'help'
+    render()
+    window.setTimeout(() => toast(`${product} context added to your request.`), 0)
+  } else if (action === 'share-product') {
+    toast(`${target.dataset.product} summary is ready to share.`)
   } else if (action === 'download-demo') {
     toast('Demo document download started.')
   } else if (action === 'submit-closure') {
